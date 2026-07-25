@@ -531,10 +531,63 @@ class Ikm extends ComicSource {
         let res = await Network.get(epId, Ikm.webHeaders);
 
         if (needPassValidator(res.body)) {
-          // rePost
           res = await Network.get(epId, Ikm.webHeaders);
         }
 
+        // Extract picCount and apiCid from the page script (new image loading mechanism)
+        let picCountMatch = res.body.match(/picCount:(\d+)/);
+        let picCount = picCountMatch ? parseInt(picCountMatch[1]) : 0;
+
+        if (picCount > 0) {
+          let apiCidMatch =
+            res.body.match(/apiCid:'(\d+)'/) ||
+            res.body.match(/"apiCid":"(\d+)"/);
+          let apiCid = apiCidMatch ? apiCidMatch[1] : "";
+          let aid = comicId.match(/\d+/)[0];
+
+          if (apiCid && aid) {
+            let allImages = [];
+            let picHeaders = {
+              ...Ikm.jsonHead,
+              referer: epId,
+            };
+
+            for (let offset = 0; offset < picCount; offset += 10) {
+              try {
+                let picRes = await Network.post(
+                  `${Ikm.baseUrl}/api/comic/read/pics`,
+                  picHeaders,
+                  `id=${apiCid}&aid=${aid}&offset=${offset}&limit=10`
+                );
+
+                if (needPassValidator(picRes.body)) {
+                  picRes = await Network.post(
+                    `${Ikm.baseUrl}/api/comic/read/pics`,
+                    picHeaders,
+                    `id=${apiCid}&aid=${aid}&offset=${offset}&limit=10`
+                  );
+                }
+
+                let data = JSON.parse(picRes.body);
+                if (data.code === 1 && data.data && data.data.pic) {
+                  for (let item of data.data.pic) {
+                    if (item.pic) {
+                      allImages.push(item.pic);
+                    }
+                  }
+                }
+              } catch (e) {
+                // Continue with next batch
+              }
+            }
+
+            if (allImages.length > 0) {
+              return { images: allImages };
+            }
+          }
+        }
+
+        // Fallback to old method for pages that still use img.lazy with data-src
         let document = new HtmlDocument(res.body);
         return {
           images: document
