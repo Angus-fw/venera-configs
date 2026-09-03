@@ -44,7 +44,7 @@ function dmDecode(str) {
 class DingManhua extends ComicSource {
     name = "顶漫画";
     key = "dingmanhua";
-    version = "1.0.0";
+    version = "1.0.1";
     minAppVersion = "1.0.0";
 
     /// 更新地址 (jsDelivr 分发)
@@ -306,6 +306,11 @@ class DingManhua extends ComicSource {
             if (chapters.size === 0) {
                 throw "顶漫画 未找到章节";
             }
+            // 接口返回最新在前, 这里按章节 id 升序排列, 保证从第 1 章开始阅读
+            chapters = new Map(
+                Array.from(chapters.entries())
+                    .sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10))
+            );
 
             return new ComicDetails({
                 title: dmDecode(title ? title[1] : id),
