@@ -181,7 +181,7 @@
         "fileName": "hot_manga.js",
         "key": "hot_manga",
         "version": "1.0.0"
-	},
+    },
     {
         "name": "Kavita",
         "fileName": "kavita.js",
@@ -194,5 +194,26 @@
         "key": "happy",
         "version": "1.0.0",
         "description": "中国大陆及日韩IP无法访问，遇到403可以尝试切换其他地区网络"
+    },
+    {
+        "name": "顶漫画",
+        "fileName": "dingmanhua.js",
+        "key": "dingmanhua",
+        "version": "1.0.0",
+        "description": "顶漫画(dingmanhua.com)漫画源"
+    },
+    {
+        "name": "腾讯动漫",
+        "fileName": "ac_qq.js",
+        "key": "ac_qq",
+        "version": "1.0.0",
+        "description": "ac.qq.com 腾讯动漫, VIP章节仅可看锁章预览图"
+    },
+    {
+        "name": "漫蛙漫画",
+        "fileName": "mwuu.js",
+        "key": "mwuu",
+        "version": "1.2.0",
+        "description": "漫蛙(mwuu.cc/manwari.cc)漫画源, 图片已内置AES解密"
     }
 ]
