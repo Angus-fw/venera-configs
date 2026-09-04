@@ -73,7 +73,7 @@ function kkTopicToComic(o) {
 class Kuaikan extends ComicSource {
     name = "快看漫画";
     key = "kuaikan";
-    version = "1.0.0";
+    version = "1.0.1";
     minAppVersion = "1.0.0";
 
     /// 更新地址 (你的 fork 仓库)
@@ -164,6 +164,15 @@ class Kuaikan extends ComicSource {
             let maxPage = total > 0 ? Math.ceil(total / pageSize) : 1;
             return { comics: comics, maxPage: maxPage };
         },
+    };
+
+    // ---------- 搜索 ----------
+    // 快看网页端暂无公开搜索接口, 占位以避免解析器深访问报错
+    search = {
+        load: async (keyword, options, page) => {
+            return { comics: [], maxPage: 1 };
+        },
+        enableTagsSuggestions: false,
     };
 
     // ---------- 详情与阅读 ----------
