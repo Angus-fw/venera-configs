@@ -73,17 +73,31 @@ function kkTopicToComic(o) {
 class Kuaikan extends ComicSource {
     name = "快看漫画";
     key = "kuaikan";
-    version = "1.0.1";
+    version = "1.0.2";
     minAppVersion = "1.0.0";
 
     /// 更新地址 (你的 fork 仓库)
     url = "https://cdn.jsdelivr.net/gh/Angus-fw/venera-configs@main/kuaikan.js";
+
+    /// VIP/付费解锁: 在电脑浏览器登录快看(VIP)后, 把请求头 Cookie 粘贴到这里,
+    /// 锁章也会返回全量图(与 10Comic 同原理: 带会话请求章节数据)。
+    settings = {
+        cookie: {
+            title: "Cookie (VIP可选)",
+            type: "input",
+            default: "",
+        },
+    };
 
     init() {
         this._headers = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
             referer: KK_SITE + "/",
         };
+        let cookie = this.loadSetting("cookie");
+        if (cookie) {
+            this._headers.cookie = cookie;
+        }
 
         this._get = async (url) => {
             let res = await Network.get(url, this._headers);
@@ -244,9 +258,23 @@ class Kuaikan extends ComicSource {
                 .filter((x) => x && x.url)
                 .map((x) => x.url);
             if (imgs.length === 0) {
-                throw "快看 本章为付费/VIP 内容或暂无图源";
+                throw "快看 本章为付费/VIP 内容: 请在源设置填写已登录快看网页的 Cookie 后重试";
             }
             return { images: imgs };
+        },
+
+        /// 图片请求带上会话(部分签名图需登录态)
+        onImageLoad: (url, comicId, epId) => {
+            let h = { referer: KK_SITE + "/" };
+            let c = this.loadSetting("cookie");
+            if (c) h.cookie = c;
+            return { url: url, headers: h };
+        },
+        onThumbnailLoad: (url) => {
+            let h = { referer: KK_SITE + "/" };
+            let c = this.loadSetting("cookie");
+            if (c) h.cookie = c;
+            return { url: url, headers: h };
         },
 
         // 粘贴纯数字 topic id 即可识别
