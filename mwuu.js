@@ -80,7 +80,7 @@ class ManwaComic extends ComicSource {
     minAppVersion = "1.0.0";
 
     // update url
-    url = "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/mwuu.js";
+    url = "https://cdn.jsdelivr.net/gh/Angus-fw/venera-configs@main/mwuu.js";
 
     /// 用户可切换入口域名
     settings = {

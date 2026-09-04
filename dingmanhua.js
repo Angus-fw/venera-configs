@@ -48,7 +48,7 @@ class DingManhua extends ComicSource {
     minAppVersion = "1.0.0";
 
     /// 更新地址 (jsDelivr 分发)
-    url = "https://cdn.jsdelivr.net/gh/venera-app/venera-configs@main/dingmanhua.js";
+    url = "https://cdn.jsdelivr.net/gh/Angus-fw/venera-configs@main/dingmanhua.js";
 
     init() {
         this._tagId = DM_TAG_ID;
