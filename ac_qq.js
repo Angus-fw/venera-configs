@@ -139,18 +139,32 @@ class TencentComic extends ComicSource {
     // unique id of the source
     key = "ac_qq";
 
-    version = "1.0.0";
+    version = "1.0.1";
 
     minAppVersion = "1.0.0";
 
     // update url
     url = "https://cdn.jsdelivr.net/gh/Angus-fw/venera-configs@main/ac_qq.js";
 
+    /// VIP/付费解锁: 在 ac.qq.com 网页登录(已购/VIP)后, 把请求头 Cookie 粘贴到这里,
+    /// 站方会对阅读页下发全量 picture(否则仅锁章预览)。
+    settings = {
+        cookie: {
+            title: "Cookie (VIP可选)",
+            type: "input",
+            default: "",
+        },
+    };
+
     init() {
         this._headers = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
             referer: AC_SITE + "/",
         };
+        let cookie = this.loadSetting("cookie");
+        if (cookie) {
+            this._headers.cookie = cookie;
+        }
 
         this._get = async (url) => {
             let res = await Network.get(url, this._headers);

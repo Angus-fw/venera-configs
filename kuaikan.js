@@ -73,7 +73,7 @@ function kkTopicToComic(o) {
 class Kuaikan extends ComicSource {
     name = "快看漫画";
     key = "kuaikan";
-    version = "1.0.2";
+    version = "1.0.3";
     minAppVersion = "1.0.0";
 
     /// 更新地址 (你的 fork 仓库)
@@ -86,6 +86,22 @@ class Kuaikan extends ComicSource {
             title: "Cookie (VIP可选)",
             type: "input",
             default: "",
+        },
+    };
+
+    // ---------- 账号: 内置浏览器自动登录 (VIP解锁) ----------
+    account = {
+        loginWithWebview: {
+            url: KK_SITE + "/webs/loginh",
+            checkStatus: (url, title) => {
+                // 离开登录页即视为登录成功(会话 Cookie 由引擎自动保存)
+                return url.indexOf("kuaikanmanhua.com") >= 0
+                    && url.indexOf("loginh") < 0
+                    && url.indexOf("/login") < 0;
+            },
+        },
+        logout: () => {
+            Network.deleteCookies(KK_SITE);
         },
     };
 

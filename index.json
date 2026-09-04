@@ -206,7 +206,7 @@
         "name": "腾讯动漫",
         "fileName": "ac_qq.js",
         "key": "ac_qq",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "description": "ac.qq.com 腾讯动漫, VIP章节仅可看锁章预览图"
     },
     {
@@ -220,7 +220,7 @@
         "name": "快看漫画",
         "fileName": "kuaikan.js",
         "key": "kuaikan",
-        "version": "1.0.2",
+        "version": "1.0.3",
         "description": "kuaikanmanhua.com 快看漫画源"
     }
 ]
