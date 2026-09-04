@@ -215,5 +215,12 @@
         "key": "mwuu",
         "version": "1.2.0",
         "description": "漫蛙(mwuu.cc/manwari.cc)漫画源, 图片已内置AES解密"
+    },
+    {
+        "name": "快看漫画",
+        "fileName": "kuaikan.js",
+        "key": "kuaikan",
+        "version": "1.0.0",
+        "description": "kuaikanmanhua.com 快看漫画源"
     }
 ]
