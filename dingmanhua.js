@@ -41,10 +41,49 @@ function dmDecode(str) {
         .trim();
 }
 
+/// 从章节名提取话/卷数字, 用于自然排序。
+/// 兼容 "第01话 xxx" / "第3卷" / "1.姐姐1" / "774 行动" / "第 16 话" 等格式。
+function dmChapterNum(name) {
+    if (!name) return null;
+    let m = /第\s*(\d+)\s*(?:话|話|卷|章|册)/.exec(name);
+    if (!m) m = /^(\d+)[.、\s:：]/.exec(name);
+    if (!m) m = /^(\d+)\s/.exec(name);
+    if (!m) m = /(\d+)\s*(?:话|話|卷)/.exec(name);
+    return m ? parseInt(m[1], 10) : null;
+}
+
+/// 章节排序: 正片按章节名数字升序(修复网站 id 乱序);
+/// 番外/外传/特别篇排在正片之后(再按数字), 无数字的公告/预告/活动放最后。
+function dmChapterMeta(name) {
+    let n = dmChapterNum(name);
+    let extra = /番外|外传|特别篇|生日|贺图|特典|SP|Q版/.test(name || "");
+    return { n, extra };
+}
+
+function dmSortChapters(chapters) {
+    let arr = Array.from(chapters.entries());
+    arr.sort((a, b) => {
+        let ia = parseInt(a[0], 10) || 0;
+        let ib = parseInt(b[0], 10) || 0;
+        let ma = dmChapterMeta(a[1]);
+        let mb = dmChapterMeta(b[1]);
+        // 分组: 正片(1, 有数字) < 番外(2) < 无数字公告/其它(3)
+        let ra = ma.extra ? 2 : (ma.n != null ? 1 : 3);
+        let rb = mb.extra ? 2 : (mb.n != null ? 1 : 3);
+        if (ra !== rb) return ra - rb;
+        if (ra === 1 || ra === 2) {
+            if (ma.n != null && mb.n != null && ma.n !== mb.n) return ma.n - mb.n;
+            return ia - ib;
+        }
+        return ia - ib;           // 公告/无数字按原 id
+    });
+    return new Map(arr);
+}
+
 class DingManhua extends ComicSource {
     name = "顶漫画";
     key = "dingmanhua";
-    version = "1.0.1";
+    version = "1.0.2";
     minAppVersion = "1.0.0";
 
     /// 更新地址 (jsDelivr 分发)
@@ -306,11 +345,8 @@ class DingManhua extends ComicSource {
             if (chapters.size === 0) {
                 throw "顶漫画 未找到章节";
             }
-            // 接口返回最新在前, 这里按章节 id 升序排列, 保证从第 1 章开始阅读
-            chapters = new Map(
-                Array.from(chapters.entries())
-                    .sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10))
-            );
+            // 网站 id 与话数并不单调(老章节重传会拿到新 id), 这里按章节名数字自然排序
+            chapters = dmSortChapters(chapters);
 
             return new ComicDetails({
                 title: dmDecode(title ? title[1] : id),
