@@ -42,12 +42,12 @@ function dmDecode(str) {
 }
 
 /// 从章节名提取话/卷数字, 用于自然排序。
-/// 兼容 "第01话 xxx" / "第3卷" / "1.姐姐1" / "774 行动" / "第 16 话" 等格式。
+/// 兼容 "第01话 xxx" / "第3卷" / "1.姐姐1" / "774 行动" /
+/// "001死神手骨" (数字开头的裸编号) / "番外…第1话" 等格式。
 function dmChapterNum(name) {
     if (!name) return null;
     let m = /第\s*(\d+)\s*(?:话|話|卷|章|册)/.exec(name);
-    if (!m) m = /^(\d+)[.、\s:：]/.exec(name);
-    if (!m) m = /^(\d+)\s/.exec(name);
+    if (!m) m = /^(\d+)/.exec(name);
     if (!m) m = /(\d+)\s*(?:话|話|卷)/.exec(name);
     return m ? parseInt(m[1], 10) : null;
 }
@@ -83,7 +83,7 @@ function dmSortChapters(chapters) {
 class DingManhua extends ComicSource {
     name = "顶漫画";
     key = "dingmanhua";
-    version = "1.0.2";
+    version = "1.0.3";
     minAppVersion = "1.0.0";
 
     /// 更新地址 (jsDelivr 分发)
