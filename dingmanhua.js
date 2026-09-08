@@ -60,19 +60,20 @@ function dmCnToArabic(str) {
     return total + cur;
 }
 
-/// 从章节名提取话/卷数字(兼容阿拉伯/中文数字), 用于判断顺序与自然排序。
-/// 兼容 "第01话"/"第3卷"/"第五十八话"/"1.姐姐1"/"774 行动"/"001死神手骨"/"番外…第1话"。
+/// 从章节名提取话/卷数字(兼容阿拉伯/中文数字、带不带"第")。
+/// 覆盖: "第589话" "589话" "六十八话" "第3卷" "1.姐姐1" "774 行动"
+///       "001死神手骨" "番外…第1话" "《…》第1话…" 等写法。
 function dmChapterNum(name) {
     if (!name) return null;
-    let m = /第\s*([0-9一二三四五六七八九十百]+)\s*(?:话|話|卷|章|册)/.exec(name);
-    if (m) {
-        let s = m[1];
-        return /^\d+$/.test(s) ? parseInt(s, 10) : dmCnToArabic(s);
+    // 章节名开头(可带可不带"第")的 阿拉伯/中文数字+话卷章册
+    let m = /^(?:第\s*)?([0-9一二三四五六七八九十百]+)\s*(?:话|話|卷|章|册)/.exec(name);
+    if (!m) m = /^(\d+)/.exec(name);                       // 001死 / 1.姐 / 774 行动
+    if (!m) {                                             // 其它位置含 "X话/卷" (如 番外第1话)
+        m = /(?:第\s*)?([0-9一二三四五六七八九十百]+)\s*(?:话|話|卷)/.exec(name);
     }
-    m = /^(\d+)/.exec(name);
-    if (m) return parseInt(m[1], 10);
-    m = /(\d+)\s*(?:话|話|卷)/.exec(name);
-    return m ? parseInt(m[1], 10) : null;
+    if (!m) return null;
+    let s = m[1];
+    return /^\d+$/.test(s) ? parseInt(s, 10) : dmCnToArabic(s);
 }
 
 /// 章节排序: 站点接口本身为"最新在前"; 若话数基本单调递减,
@@ -121,7 +122,7 @@ function dmSortChapters(chapters) {
 class DingManhua extends ComicSource {
     name = "顶漫画";
     key = "dingmanhua";
-    version = "1.0.4";
+    version = "1.0.5";
     minAppVersion = "1.0.0";
 
     /// 更新地址 (jsDelivr 分发)
