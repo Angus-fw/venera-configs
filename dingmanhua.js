@@ -41,19 +41,57 @@ function dmDecode(str) {
         .trim();
 }
 
-/// 从章节名提取话/卷数字, 用于自然排序。
-/// 兼容 "第01话 xxx" / "第3卷" / "1.姐姐1" / "774 行动" /
-/// "001死神手骨" (数字开头的裸编号) / "番外…第1话" 等格式。
+/// 中文数字(一~九十九/百) -> 阿拉伯数字, 用于 "第五十八话" 这类章节名
+function dmCnToArabic(str) {
+    const d = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+    let total = 0;
+    let cur = 0;
+    for (let ch of String(str || "")) {
+        if (d[ch]) {
+            cur = d[ch];
+        } else if (ch === "十") {
+            total += (cur === 0 ? 1 : cur) * 10;
+            cur = 0;
+        } else if (ch === "百") {
+            total += (cur === 0 ? 1 : cur) * 100;
+            cur = 0;
+        }
+    }
+    return total + cur;
+}
+
+/// 从章节名提取话/卷数字(兼容阿拉伯/中文数字), 用于判断顺序与自然排序。
+/// 兼容 "第01话"/"第3卷"/"第五十八话"/"1.姐姐1"/"774 行动"/"001死神手骨"/"番外…第1话"。
 function dmChapterNum(name) {
     if (!name) return null;
-    let m = /第\s*(\d+)\s*(?:话|話|卷|章|册)/.exec(name);
-    if (!m) m = /^(\d+)/.exec(name);
-    if (!m) m = /(\d+)\s*(?:话|話|卷)/.exec(name);
+    let m = /第\s*([0-9一二三四五六七八九十百]+)\s*(?:话|話|卷|章|册)/.exec(name);
+    if (m) {
+        let s = m[1];
+        return /^\d+$/.test(s) ? parseInt(s, 10) : dmCnToArabic(s);
+    }
+    m = /^(\d+)/.exec(name);
+    if (m) return parseInt(m[1], 10);
+    m = /(\d+)\s*(?:话|話|卷)/.exec(name);
     return m ? parseInt(m[1], 10) : null;
 }
 
-/// 章节排序: 正片按章节名数字升序(修复网站 id 乱序);
-/// 番外/外传/特别篇排在正片之后(再按数字), 无数字的公告/预告/活动放最后。
+/// 章节排序: 站点接口本身为"最新在前"; 若话数基本单调递减,
+/// 说明站点顺序正确 -> 只整体反转为"第1话在前"的原顺序(无话号章节原位保留);
+/// 否则(检测到真乱序)才按章节名数字做自然排序。
+function dmArrangeChapters(chapters) {
+    let entries = Array.from(chapters.entries());
+    let nums = entries.map(([, name]) => dmChapterNum(name)).filter((v) => v != null);
+    let monotonicDesc = true;
+    for (let i = 1; i < nums.length; i++) {
+        if (nums[i] > nums[i - 1]) { monotonicDesc = false; break; }
+    }
+    if (monotonicDesc && nums.length > 0) {
+        return new Map(entries.reverse());
+    }
+    return dmSortChapters(chapters);
+}
+
+/// 兜底数值排序: 正片按数字升序; 番外殿后; 无数字的公告等放最后。
 function dmChapterMeta(name) {
     let n = dmChapterNum(name);
     let extra = /番外|外传|特别篇|生日|贺图|特典|SP|Q版/.test(name || "");
@@ -83,7 +121,7 @@ function dmSortChapters(chapters) {
 class DingManhua extends ComicSource {
     name = "顶漫画";
     key = "dingmanhua";
-    version = "1.0.3";
+    version = "1.0.4";
     minAppVersion = "1.0.0";
 
     /// 更新地址 (jsDelivr 分发)
@@ -346,7 +384,7 @@ class DingManhua extends ComicSource {
                 throw "顶漫画 未找到章节";
             }
             // 网站 id 与话数并不单调(老章节重传会拿到新 id), 这里按章节名数字自然排序
-            chapters = dmSortChapters(chapters);
+            chapters = dmArrangeChapters(chapters);
 
             return new ComicDetails({
                 title: dmDecode(title ? title[1] : id),
